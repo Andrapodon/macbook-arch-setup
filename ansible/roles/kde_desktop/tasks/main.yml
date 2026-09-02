@@ -1,0 +1,70 @@
+---
+- name: Install KDE Plasma and Wayland desktop packages
+  community.general.pacman:
+    name:
+      - plasma-meta
+      - plasma-wayland-session
+      - sddm
+      - konsole
+      - dolphin
+      - ark
+      - kdegraphics-thumbnailers
+      - ffmpegthumbs
+      - kvantum
+      - qt5-wayland
+      - qt6-wayland
+    state: present
+
+- name: Create SDDM config directory
+  ansible.builtin.file:
+    path: /etc/sddm.conf.d
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Deploy SDDM Wayland configuration
+  ansible.builtin.template:
+    src: sddm.conf.j2
+    dest: /etc/sddm.conf.d/wayland.conf
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Ensure target user config directories exist
+  ansible.builtin.file:
+    path: "/home/{{ target_user }}/.config"
+    state: directory
+    owner: "{{ target_user }}"
+    group: "{{ target_user }}"
+    mode: '0755'
+
+- name: Configure KWin blur performance for Intel Iris Pro 5200
+  ansible.builtin.template:
+    src: kwinrc.j2
+    dest: "/home/{{ target_user }}/.config/kwinrc"
+    owner: "{{ target_user }}"
+    group: "{{ target_user }}"
+    mode: '0644'
+
+- name: Configure Retina Display scaling in kdeglobals
+  ansible.builtin.template:
+    src: kdeglobals.j2
+    dest: "/home/{{ target_user }}/.config/kdeglobals"
+    owner: "{{ target_user }}"
+    group: "{{ target_user }}"
+    mode: '0644'
+
+- name: Install WhiteSur macOS-like KDE theme from AUR
+  ansible.builtin.command:
+    cmd: yay -S --noconfirm --needed whitesur-kde-theme-git whitesur-icon-theme-git whitesur-cursor-theme-git
+  become: true
+  become_user: "{{ target_user }}"
+  register: whitesur_install
+  failed_when: false
+  changed_when: whitesur_install.rc == 0
+
+- name: Enable SDDM display manager service
+  ansible.builtin.systemd:
+    name: sddm.service
+    enabled: true

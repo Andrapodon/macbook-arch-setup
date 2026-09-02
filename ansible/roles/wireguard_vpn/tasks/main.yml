@@ -1,0 +1,45 @@
+---
+- name: Install WireGuard tools and DNS resolution helper
+  community.general.pacman:
+    name:
+      - wireguard-tools
+      - openresolv
+    state: present
+
+- name: Create WireGuard configuration directory
+  ansible.builtin.file:
+    path: /etc/wireguard
+    state: directory
+    owner: root
+    group: root
+    mode: '0700'
+
+- name: Deploy WireGuard wg0 configuration
+  ansible.builtin.template:
+    src: wg0.conf.j2
+    dest: "/etc/wireguard/{{ wireguard.interface }}.conf"
+    owner: root
+    group: root
+    mode: '0600'
+
+- name: Ensure NetworkManager dispatcher directory exists
+  ansible.builtin.file:
+    path: /etc/NetworkManager/dispatcher.d
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Deploy NetworkManager WAN auto-connect dispatcher script
+  ansible.builtin.template:
+    src: 99-wireguard-wan.sh.j2
+    dest: /etc/NetworkManager/dispatcher.d/99-wireguard-wan.sh
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Enable NetworkManager dispatcher service
+  ansible.builtin.systemd:
+    name: NetworkManager-dispatcher.service
+    state: started
+    enabled: true

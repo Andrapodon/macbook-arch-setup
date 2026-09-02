@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+# ==============================================================================
+# NetworkManager Dispatcher Script: Automatic Home WireGuard on WAN
+# ==============================================================================
+INTERFACE="$1"
+ACTION="$2"
+WG_IFACE="{{ wireguard.interface }}"
+
+# Home Wi-Fi SSIDs list
+HOME_SSIDS=(
+{% for ssid in home_wifi_ssids %}
+  "{{ ssid }}"
+{% endfor %}
+)
+
+is_home_network() {
+    local current_ssid="$1"
+    for home_ssid in "${HOME_SSIDS[@]}"; do
+        if [ "$current_ssid" = "$home_ssid" ]; then
+            return 0
+        fi
+    done
+    return 1
+}
+
+case "$ACTION" in
+    up)
+        # Check if connected to Wi-Fi or Ethernet
+        CURRENT_SSID="${CONNECTION_ID:-}"
+        
+        if is_home_network "$CURRENT_SSID"; then
+            # At home: disable WireGuard if running to avoid routing loops / unnecessary encryption
+            if /usr/bin/wg show "$WG_IFACE" &>/dev/null; then
+                logger -t nm-dispatcher-wg "Connected to home network '$CURRENT_SSID'. Tearing down $WG_IFACE."
+                /usr/bin/wg-quick down "$WG_IFACE" || true
+            fi
+        else
+            # Outside home (WAN): start WireGuard tunnel
+            if ! /usr/bin/wg show "$WG_IFACE" &>/dev/null; then
+                logger -t nm-dispatcher-wg "Connected to WAN network '$CURRENT_SSID'. Bringing up $WG_IFACE."
+                /usr/bin/wg-quick up "$WG_IFACE" || true
+            fi
+        fi
+        ;;
+    down)
+        # If no active connections left, tear down WireGuard
+        ACTIVE_CONNECTIONS=$(nmcli -t -f STATE connection show --active | grep -E '^activated$' | wc -l)
+        if [ "$ACTIVE_CONNECTIONS" -le 1 ]; then
+            if /usr/bin/wg show "$WG_IFACE" &>/dev/null; then
+                logger -t nm-dispatcher-wg "All network connections down. Tearing down $WG_IFACE."
+                /usr/bin/wg-quick down "$WG_IFACE" || true
+            fi
+        fi
+        ;;
+esac
+exit 0

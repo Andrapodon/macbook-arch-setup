@@ -1,0 +1,99 @@
+{
+  "version": "2.8.0",
+  "audio_config": {
+    "audio": "pipewire"
+  },
+  "bootloader": "systemd-boot",
+  "disk_layouts": [
+    {
+      "device": "/dev/sda",
+      "wipe": true,
+      "partitions": [
+        {
+          "boot": true,
+          "format": true,
+          "fs_type": "fat32",
+          "mountpoint": "/boot",
+          "size": "1024MiB",
+          "start": "1MiB",
+          "type": "primary"
+        },
+        {
+          "format": true,
+          "fs_type": "btrfs",
+          "mountpoint": null,
+          "mount_options": [
+            "compress=zstd:1",
+            "noatime",
+            "discard=async"
+          ],
+          "size": "100%",
+          "start": "1025MiB",
+          "type": "primary",
+          "btrfs": [
+            {
+              "name": "@",
+              "mountpoint": "/",
+              "mount_options": ["compress=zstd:1", "noatime", "discard=async"]
+            },
+            {
+              "name": "@home",
+              "mountpoint": "/home",
+              "mount_options": ["compress=zstd:1", "noatime", "discard=async"]
+            },
+            {
+              "name": "@snapshots",
+              "mountpoint": "/.snapshots",
+              "mount_options": ["compress=zstd:1", "noatime", "discard=async"]
+            },
+            {
+              "name": "@var_log",
+              "mountpoint": "/var/log",
+              "mount_options": ["compress=zstd:1", "noatime", "discard=async"]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "hostname": "macbook",
+  "kernels": [
+    "linux",
+    "linux-headers"
+  ],
+  "keyboard_layout": "de",
+  "locale_config": {
+    "kb_layout": "de",
+    "sys_enc": "UTF-8",
+    "sys_lang": "en_US.UTF-8"
+  },
+  "network_config": {
+    "type": "nm"
+  },
+  "packages": [
+    "base",
+    "base-devel",
+    "linux",
+    "linux-firmware",
+    "linux-headers",
+    "git",
+    "ansible",
+    "python",
+    "openssh",
+    "sudo",
+    "btrfs-progs",
+    "networkmanager",
+    "curl",
+    "wget",
+    "zsh",
+    "htop"
+  ],
+  "parallel_downloads": 5,
+  "profile_config": {
+    "profile": {
+      "details": [],
+      "main": "Minimal"
+    }
+  },
+  "timezone": "Europe/Berlin"
+}

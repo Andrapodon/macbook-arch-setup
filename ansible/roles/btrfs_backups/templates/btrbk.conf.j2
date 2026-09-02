@@ -1,0 +1,38 @@
+# ==============================================================================
+# /etc/btrbk/btrbk.conf - Automated Btrfs Snapshots & Backup Configuration
+# ==============================================================================
+
+# Timezone for snapshot timestamps
+timestamp_format        long
+
+# Retention policy for local snapshots
+snapshot_preserve_min   latest
+snapshot_preserve       {{ btrbk.keep_daily }}d {{ btrbk.keep_weekly }}w {{ btrbk.keep_monthly }}m
+
+# Directory where local snapshots are stored
+snapshot_dir            {{ btrbk.snapshot_dir }}
+
+{% if btrbk.remote_backup_enabled %}
+# Remote backup target (e.g. your home server or NAS over SSH / WireGuard)
+target_preserve_min     latest
+target_preserve         14d 8w 12m
+
+ssh_identity            /root/.ssh/id_ed25519
+ssh_user                {{ btrbk.remote_user }}
+{% endif %}
+
+# Volume definition for root filesystem
+volume /
+  subvolume @
+    snapshot_name root-snapshot
+{% if btrbk.remote_backup_enabled %}
+    target ssh://{{ btrbk.remote_host }}{{ btrbk.remote_dir }}/root
+{% endif %}
+
+# Volume definition for /home filesystem
+volume /home
+  subvolume @home
+    snapshot_name home-snapshot
+{% if btrbk.remote_backup_enabled %}
+    target ssh://{{ btrbk.remote_host }}{{ btrbk.remote_dir }}/home
+{% endif %}

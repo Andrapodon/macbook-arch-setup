@@ -1,0 +1,13 @@
+---
+- name: Setup and Configure Arch Linux on MacBook Pro 11,4
+  hosts: macbook
+  become: true
+
+  roles:
+    - aur_support
+    - macbook_hardware
+    - kde_desktop
+    - ssh_remote
+    - wireguard_vpn
+    - seadrive
+    - btrfs_backups

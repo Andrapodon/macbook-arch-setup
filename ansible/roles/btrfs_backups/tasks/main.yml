@@ -1,0 +1,37 @@
+---
+- name: Install btrfs utilities and btrbk
+  community.general.pacman:
+    name:
+      - btrfs-progs
+      - btrbk
+    state: present
+
+- name: Ensure snapshot directory exists
+  ansible.builtin.file:
+    path: "{{ btrbk.snapshot_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: '0750'
+
+- name: Create /etc/btrbk configuration directory
+  ansible.builtin.file:
+    path: /etc/btrbk
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Deploy btrbk.conf configuration
+  ansible.builtin.template:
+    src: btrbk.conf.j2
+    dest: /etc/btrbk/btrbk.conf
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Enable and start btrbk.timer for automated scheduled backups
+  ansible.builtin.systemd:
+    name: btrbk.timer
+    state: started
+    enabled: true

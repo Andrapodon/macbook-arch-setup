@@ -1,0 +1,50 @@
+---
+- name: Enable ParallelDownloads and Color in /etc/pacman.conf
+  ansible.builtin.replace:
+    path: /etc/pacman.conf
+    regexp: '^#\s*(ParallelDownloads\s*=.*)$'
+    replace: 'ParallelDownloads = 5'
+
+- name: Enable Color in /etc/pacman.conf
+  ansible.builtin.replace:
+    path: /etc/pacman.conf
+    regexp: '^#Color'
+    replace: 'Color'
+
+- name: Install base development dependencies for AUR
+  community.general.pacman:
+    name:
+      - base-devel
+      - git
+      - curl
+    state: present
+    update_cache: true
+
+- name: Check if yay is installed
+  ansible.builtin.command: which yay
+  register: yay_check
+  failed_when: false
+  changed_when: false
+
+- name: Install yay AUR helper if missing
+  when: yay_check.rc != 0
+  block:
+    - name: Clone yay-bin repository
+      ansible.builtin.git:
+        repo: 'https://aur.archlinux.org/yay-bin.git'
+        dest: '/tmp/yay-bin'
+        version: master
+      become: true
+      become_user: "{{ target_user }}"
+
+    - name: Build and install yay-bin
+      ansible.builtin.command:
+        cmd: makepkg -si --noconfirm
+        chdir: /tmp/yay-bin
+      become: true
+      become_user: "{{ target_user }}"
+
+    - name: Clean up temporary yay build directory
+      ansible.builtin.file:
+        path: /tmp/yay-bin
+        state: absent

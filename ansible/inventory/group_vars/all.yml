@@ -1,0 +1,67 @@
+---
+# ==============================================================================
+# Global Configuration Variables for MacBook Pro (Mid-2015) Arch Setup
+# ==============================================================================
+
+# User configuration
+target_user: "ramona"
+target_user_shell: "/bin/zsh"
+
+# Maintainer SSH public keys (add your SSH public key here for remote access)
+maintainer_ssh_public_keys:
+  - "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAI_REPLACE_WITH_YOUR_MAINTAINER_PUBLIC_KEY_ maintainer@home"
+
+# Hardware / Display settings (Retina 2880x1800, Intel Iris Pro 5200)
+display:
+  scale_factor: 2.0  # 2.0 = 200% integer scaling (looks like 1440x900)
+  kwin_blur_strength: 2  # 1=Low, 2=Medium, 3=High. 2 is ideal for Iris Pro 5200
+
+# MacBook Fan & Thermal Management (mbpfan daemon)
+mbpfan:
+  min_fan1_speed: 2000
+  max_fan1_speed: 6199
+  min_fan2_speed: 2000
+  max_fan2_speed: 6199
+  low_temp: 63
+  high_temp: 72
+  max_temp: 86
+
+# Keyboard behavior (hid_apple)
+# fnmode: 1 = fkeyslast (media keys default), 2 = fkeysfirst (F1-F12 default)
+# swap_opt_cmd: 0 = normal mac layout, 1 = alt and windows key swapped
+hid_apple:
+  fnmode: 2
+  swap_opt_cmd: 0
+
+# Network & Home VPN (WireGuard + Auto-Connect on WAN)
+home_wifi_ssids:
+  - "MyHomeNetwork"
+  - "MyHomeNetwork_5G"
+
+wireguard:
+  interface: "wg0"
+  address: "10.10.0.2/24"
+  client_private_key: "REPLACE_WITH_CLIENT_PRIVATE_KEY"
+  dns: "10.10.0.1"
+  server_public_key: "REPLACE_WITH_SERVER_PUBLIC_KEY"
+  server_endpoint: "vpn.yourhome.com:51820"
+  allowed_ips: "10.10.0.0/24, 192.168.1.0/24"
+  keepalive: 25
+
+# SeaDrive (Seafile client)
+seadrive:
+  mount_point: "/home/{{ target_user }}/SeaDrive"
+  server_url: "https://seafile.yourdomain.com"
+  username: "her-email@example.com"
+  enable_autostart: true
+
+# Btrfs Backups (btrbk)
+btrbk:
+  snapshot_dir: "/.snapshots"
+  keep_daily: 7
+  keep_weekly: 4
+  keep_monthly: 6
+  remote_backup_enabled: false
+  remote_host: "backup-server.local"
+  remote_user: "backup"
+  remote_dir: "/mnt/backups/macbook"

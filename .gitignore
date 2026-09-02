@@ -1,0 +1,16 @@
+# macOS metadata
+.DS_Store
+
+# Sensitive archinstall credentials (passwords)
+archinstall-config/user_credentials.json
+
+# Ansible retry and cache files
+*.retry
+.ansible/
+__pycache__/
+
+# Private keys or secrets if created locally
+*.pem
+*.key
+id_ed25519*
+!*.j2

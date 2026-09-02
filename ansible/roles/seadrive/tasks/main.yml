@@ -1,0 +1,41 @@
+---
+- name: Ensure fuse2 and fuse3 are installed for SeaDrive
+  community.general.pacman:
+    name:
+      - fuse2
+      - fuse3
+    state: present
+
+- name: Install seadrive-gui from AUR
+  ansible.builtin.command:
+    cmd: yay -S --noconfirm --needed seadrive-gui
+  become: true
+  become_user: "{{ target_user }}"
+  register: seadrive_install
+  failed_when: false
+  changed_when: seadrive_install.rc == 0
+
+- name: Create SeaDrive mount directory
+  ansible.builtin.file:
+    path: "{{ seadrive.mount_point }}"
+    state: directory
+    owner: "{{ target_user }}"
+    group: "{{ target_user }}"
+    mode: '0755'
+
+- name: Ensure autostart directory exists
+  ansible.builtin.file:
+    path: "/home/{{ target_user }}/.config/autostart"
+    state: directory
+    owner: "{{ target_user }}"
+    group: "{{ target_user }}"
+    mode: '0755'
+
+- name: Configure SeaDrive to autostart on desktop login
+  ansible.builtin.template:
+    src: seadrive.desktop.j2
+    dest: "/home/{{ target_user }}/.config/autostart/seadrive.desktop"
+    owner: "{{ target_user }}"
+    group: "{{ target_user }}"
+    mode: '0644'
+  when: seadrive.enable_autostart

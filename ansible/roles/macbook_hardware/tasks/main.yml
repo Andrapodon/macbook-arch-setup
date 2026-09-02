@@ -1,0 +1,51 @@
+---
+- name: Install MacBook hardware packages and drivers
+  community.general.pacman:
+    name:
+      - mesa
+      - vulkan-intel
+      - intel-media-driver
+      - libva-intel-driver
+      - power-profiles-daemon
+      - brightnessctl
+      - pipewire
+      - wireplumber
+      - pipewire-pulse
+      - pipewire-alsa
+      - libinput
+      - xf86-input-libinput
+    state: present
+
+- name: Install mbpfan from official repos or AUR
+  community.general.pacman:
+    name: mbpfan
+    state: present
+
+- name: Configure mbpfan for MacBook Pro 11,4
+  ansible.builtin.template:
+    src: mbpfan.conf.j2
+    dest: /etc/mbpfan.conf
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Restart mbpfan
+
+- name: Configure hid_apple kernel module options
+  ansible.builtin.template:
+    src: hid_apple.conf.j2
+    dest: /etc/modprobe.d/hid_apple.conf
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Enable and start mbpfan service
+  ansible.builtin.systemd:
+    name: mbpfan.service
+    state: started
+    enabled: true
+
+- name: Enable and start power-profiles-daemon
+  ansible.builtin.systemd:
+    name: power-profiles-daemon.service
+    state: started
+    enabled: true

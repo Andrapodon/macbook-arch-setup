@@ -1,0 +1,60 @@
+---
+- name: Install OpenSSH package
+  community.general.pacman:
+    name: openssh
+    state: present
+
+- name: Create sshd_config.d directory
+  ansible.builtin.file:
+    path: /etc/ssh/sshd_config.d
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Deploy maintainer SSH hardening configuration
+  ansible.builtin.template:
+    src: 10-maintainer.conf.j2
+    dest: /etc/ssh/sshd_config.d/10-maintainer.conf
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Restart sshd
+
+- name: Ensure target user .ssh directory exists
+  ansible.builtin.file:
+    path: "/home/{{ target_user }}/.ssh"
+    state: directory
+    owner: "{{ target_user }}"
+    group: "{{ target_user }}"
+    mode: '0700'
+
+- name: Ensure root .ssh directory exists
+  ansible.builtin.file:
+    path: /root/.ssh
+    state: directory
+    owner: root
+    group: root
+    mode: '0700'
+
+- name: Deploy maintainer public keys to target user authorized_keys
+  ansible.posix.authorized_key:
+    user: "{{ target_user }}"
+    state: present
+    key: "{{ item }}"
+  loop: "{{ maintainer_ssh_public_keys }}"
+  when: maintainer_ssh_public_keys | length > 0
+
+- name: Deploy maintainer public keys to root authorized_keys
+  ansible.posix.authorized_key:
+    user: root
+    state: present
+    key: "{{ item }}"
+  loop: "{{ maintainer_ssh_public_keys }}"
+  when: maintainer_ssh_public_keys | length > 0
+
+- name: Enable and start sshd service
+  ansible.builtin.systemd:
+    name: sshd.service
+    state: started
+    enabled: true
