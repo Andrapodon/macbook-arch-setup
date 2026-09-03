@@ -34,22 +34,38 @@
             {
               "name": "@",
               "mountpoint": "/",
-              "mount_options": ["compress=zstd:1", "noatime", "discard=async"]
+              "mount_options": [
+                "compress=zstd:1",
+                "noatime",
+                "discard=async"
+              ]
             },
             {
               "name": "@home",
               "mountpoint": "/home",
-              "mount_options": ["compress=zstd:1", "noatime", "discard=async"]
+              "mount_options": [
+                "compress=zstd:1",
+                "noatime",
+                "discard=async"
+              ]
             },
             {
               "name": "@snapshots",
               "mountpoint": "/.snapshots",
-              "mount_options": ["compress=zstd:1", "noatime", "discard=async"]
+              "mount_options": [
+                "compress=zstd:1",
+                "noatime",
+                "discard=async"
+              ]
             },
             {
               "name": "@var_log",
               "mountpoint": "/var/log",
-              "mount_options": ["compress=zstd:1", "noatime", "discard=async"]
+              "mount_options": [
+                "compress=zstd:1",
+                "noatime",
+                "discard=async"
+              ]
             }
           ]
         }
@@ -59,7 +75,9 @@
   "hostname": "macbook",
   "kernels": [
     "linux",
-    "linux-headers"
+    "linux-zen",
+    "linux-headers",
+    "linux-zen-headers"
   ],
   "keyboard_layout": "de",
   "locale_config": {
@@ -74,8 +92,10 @@
     "base",
     "base-devel",
     "linux",
+    "linux-zen",
     "linux-firmware",
     "linux-headers",
+    "linux-zen-headers",
     "git",
     "ansible",
     "python",
