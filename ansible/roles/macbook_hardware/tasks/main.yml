@@ -6,7 +6,9 @@
       - vulkan-intel
       - intel-media-driver
       - libva-intel-driver
-      - power-profiles-daemon
+      - cpupower
+      - tlp
+      - intel-undervolt
       - brightnessctl
       - pipewire
       - wireplumber
@@ -44,8 +46,14 @@
     state: started
     enabled: true
 
-- name: Enable and start power-profiles-daemon
+- name: Enable and start tlp
   ansible.builtin.systemd:
-    name: power-profiles-daemon.service
+    name: tlp.service
+    state: started
+    enabled: true
+
+- name: Enable intel-undervolt
+  ansible.builtin.systemd:
+    name: intel-undervolt.service
     state: started
     enabled: true

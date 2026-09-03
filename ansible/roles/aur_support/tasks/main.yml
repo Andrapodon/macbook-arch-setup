@@ -11,6 +11,13 @@
     regexp: '^#Color'
     replace: 'Color'
 
+- name: Allow target_user to run pacman without password for AUR helpers
+  ansible.builtin.copy:
+    content: "{{ target_user }} ALL=(ALL) NOPASSWD: /usr/bin/pacman"
+    dest: "/etc/sudoers.d/10-installer-pacman"
+    mode: '0440'
+    validate: /usr/sbin/visudo -csf %s
+
 - name: Install base development dependencies for AUR
   community.general.pacman:
     name:

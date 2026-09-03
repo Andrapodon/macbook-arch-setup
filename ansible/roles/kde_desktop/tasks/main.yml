@@ -3,7 +3,6 @@
   community.general.pacman:
     name:
       - plasma-meta
-      - plasma-wayland-session
       - sddm
       - konsole
       - dolphin
@@ -40,20 +39,32 @@
     mode: '0755'
 
 - name: Configure KWin blur performance for Intel Iris Pro 5200
-  ansible.builtin.template:
-    src: kwinrc.j2
-    dest: "/home/{{ target_user }}/.config/kwinrc"
+  community.general.ini_file:
+    path: "/home/{{ target_user }}/.config/kwinrc"
+    section: "{{ item.section }}"
+    option: "{{ item.option }}"
+    value: "{{ item.value }}"
     owner: "{{ target_user }}"
     group: "{{ target_user }}"
     mode: '0644'
+  loop:
+    - { section: 'Compositing', option: 'Backend', value: 'OpenGL' }
+    - { section: 'Compositing', option: 'GLCore', value: 'true' }
+    - { section: 'Plugins', option: 'blurEnabled', value: 'true' }
+    - { section: 'Effect-blur', option: 'BlurStrength', value: '{{ display.kwin_blur_strength }}' }
 
 - name: Configure Retina Display scaling in kdeglobals
-  ansible.builtin.template:
-    src: kdeglobals.j2
-    dest: "/home/{{ target_user }}/.config/kdeglobals"
+  community.general.ini_file:
+    path: "/home/{{ target_user }}/.config/kdeglobals"
+    section: "{{ item.section }}"
+    option: "{{ item.option }}"
+    value: "{{ item.value }}"
     owner: "{{ target_user }}"
     group: "{{ target_user }}"
     mode: '0644'
+  loop:
+    - { section: 'KScreen', option: 'ScaleFactor', value: '{{ display.scale_factor }}' }
+    - { section: 'General', option: 'TerminalApplication', value: 'konsole' }
 
 - name: Install WhiteSur macOS-like KDE theme from AUR
   ansible.builtin.command:

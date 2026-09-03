@@ -35,17 +35,16 @@ hid_apple:
 
 # Network & Home VPN (WireGuard + Auto-Connect on WAN)
 home_wifi_ssids:
-  - "MyHomeNetwork"
-  - "MyHomeNetwork_5G"
+  - "Dehoam"
 
 wireguard:
   interface: "wg0"
-  address: "10.10.0.2/24"
-  client_private_key: "REPLACE_WITH_CLIENT_PRIVATE_KEY"
-  dns: "10.10.0.1"
-  server_public_key: "REPLACE_WITH_SERVER_PUBLIC_KEY"
-  server_endpoint: "vpn.yourhome.com:51820"
-  allowed_ips: "10.10.0.0/24, 192.168.1.0/24"
+  address: "10.0.1.3/32"
+  client_private_key: "KIkp8QNM8hxGaihQaz/A6yD0bq8N7ekD2XpZPIwQjU4="
+  dns: "192.168.1.1"
+  server_public_key: "UcPYJsmU0loY6yB2ZfXh24/ZObOtDpz2MHuZFJYuoFE="
+  server_endpoint: "dehoam.internet-box.ch:51820"
+  allowed_ips: "0.0.0.0/0"
   keepalive: 25
 
 # SeaDrive (Seafile client)

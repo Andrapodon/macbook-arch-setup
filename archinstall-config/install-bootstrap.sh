@@ -19,9 +19,18 @@ if ! ping -c 1 archlinux.org &>/dev/null; then
 fi
 
 # Detect Apple SSD
-DISKS=$(lsblk -d -o NAME,SIZE,MODEL | grep -iE 'APPLE|SSD|sda' || true)
 echo "[*] Available disks:"
 lsblk -d -o NAME,SIZE,TYPE,MODEL
+
+read -p "Enter the target disk for installation (e.g., /dev/sda or /dev/nvme0n1): " TARGET_DISK
+
+if [ ! -b "$TARGET_DISK" ]; then
+    echo "[!] Block device $TARGET_DISK not found."
+    exit 1
+fi
+
+echo "[*] Updating user_configuration.json with target disk: $TARGET_DISK"
+sed -i "s|\"/dev/sda\"|\"$TARGET_DISK\"|g" "${CONFIG_FILE}"
 
 if [ ! -f "${CREDS_FILE}" ]; then
     echo "[!] ${CREDS_FILE} not found!"
