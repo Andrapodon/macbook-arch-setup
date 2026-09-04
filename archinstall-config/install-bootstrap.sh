@@ -65,6 +65,8 @@ for mod in disk_config.get('device_modifications', []):
                     start_bytes = start_val * 1024 * 1024
                     
                 rem_bytes = total_bytes - start_bytes - (2 * 1024 * 1024)
+                # Align down to nearest 1 MiB (1024 * 1024 bytes) to prevent "Partition is Misaligned" error
+                rem_bytes = (rem_bytes // (1024 * 1024)) * (1024 * 1024)
                 part['size'] = {
                     'sector_size': {'unit': 'B', 'value': sector_size},
                     'unit': 'B',
