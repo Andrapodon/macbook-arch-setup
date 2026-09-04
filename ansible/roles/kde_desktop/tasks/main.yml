@@ -72,8 +72,8 @@
   become: true
   become_user: "{{ target_user }}"
   register: whitesur_install
-  failed_when: false
-  changed_when: whitesur_install.rc == 0
+  failed_when: whitesur_install.rc != 0
+  changed_when: "whitesur_install.rc == 0 and 'there is nothing to do' not in whitesur_install.stdout"
 
 - name: Enable SDDM display manager service
   ansible.builtin.systemd:

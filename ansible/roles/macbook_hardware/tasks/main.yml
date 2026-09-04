@@ -58,3 +58,20 @@
     name: intel-undervolt.service
     state: started
     enabled: true
+
+- name: Install FaceTime HD Camera drivers from AUR
+  ansible.builtin.command:
+    cmd: yay -S --noconfirm --needed facetimehd-firmware facetimehd-dkms
+  become: true
+  become_user: "{{ target_user }}"
+  register: facetimehd_install
+  failed_when: facetimehd_install.rc != 0
+  changed_when: "facetimehd_install.rc == 0 and 'there is nothing to do' not in facetimehd_install.stdout"
+
+- name: Ensure facetimehd module loads on boot
+  ansible.builtin.copy:
+    content: "facetimehd\n"
+    dest: /etc/modules-load.d/facetimehd.conf
+    owner: root
+    group: root
+    mode: '0644'
