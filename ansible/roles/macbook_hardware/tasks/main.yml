@@ -39,6 +39,7 @@
     owner: root
     group: root
     mode: '0644'
+  notify: Rebuild initramfs
 
 - name: Enable and start mbpfan service
   ansible.builtin.systemd:

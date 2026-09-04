@@ -92,8 +92,8 @@ if ! archinstall --silent --config "${TMP_CONFIG}" --creds "${CREDS_FILE}"; then
 fi
 
 echo "=========================================================================="
-echo "Installation complete!"
-echo "Next step: Reboot into the installed system and run the Ansible playbook:"
-echo "  cd /home/ramona/macbook-arch-setup/ansible"
-echo "  ansible-playbook -i inventory/hosts.ini playbook.yml --connection=local"
+echo "Next step: Reboot into the installed system, connect to Wi-Fi, and run:"
+echo "  git clone https://github.com/Andrapodon/macbook-arch-setup.git ~/macbook-arch-setup"
+echo "  cd ~/macbook-arch-setup/ansible"
+echo "  ansible-playbook -i inventory/hosts.ini playbook.yml --connection=local --ask-vault-pass"
 echo "=========================================================================="

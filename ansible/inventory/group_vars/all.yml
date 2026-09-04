@@ -9,7 +9,8 @@ target_user_shell: "/bin/zsh"
 
 # Maintainer SSH public keys (add your SSH public key here for remote access)
 maintainer_ssh_public_keys:
-  - "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAI_REPLACE_WITH_YOUR_MAINTAINER_PUBLIC_KEY_ maintainer@home"
+  - "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKSUfjFhLuIkdot8coZf/kbKDUMVsQzdbYqeUzob44bp"
+  - "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJmUQeibZC25QWT2FJ8og42SMUjASn8Zfaxtp8QBaOqD"
 
 # Hardware / Display settings (Retina 2880x1800, Intel Iris Pro 5200)
 display:

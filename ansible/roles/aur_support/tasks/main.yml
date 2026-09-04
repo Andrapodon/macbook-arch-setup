@@ -55,3 +55,8 @@
       ansible.builtin.file:
         path: /tmp/yay-bin
         state: absent
+
+- name: Change user shell to target_user_shell
+  ansible.builtin.user:
+    name: "{{ target_user }}"
+    shell: "{{ target_user_shell }}"
