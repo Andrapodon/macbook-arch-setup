@@ -36,13 +36,45 @@ sed -i "s|\"/dev/sda\"|\"$TARGET_DISK\"|g" "${TMP_DISK_LAYOUT}"
 
 echo "[*] Updating user_configuration.json with target disk: $TARGET_DISK"
 TMP_CONFIG="/tmp/archinstall_config.json"
-python -c "import json, sys
+python -c "import json, sys, subprocess
 with open(sys.argv[1]) as f1, open(sys.argv[2]) as f2:
     config = json.load(f1)
-    config['disk_config'] = json.load(f2)
+    disk_config = json.load(f2)
+
+target_disk = sys.argv[4]
+try:
+    total_bytes = int(subprocess.check_output(['lsblk', '-n', '-b', '-o', 'SIZE', '-d', target_disk]).strip())
+    sector_size = int(subprocess.check_output(['lsblk', '-n', '-o', 'LOG-SEC', '-d', target_disk]).strip())
+except Exception as e:
+    sys.exit(f'Failed to get disk size: {e}')
+
+for mod in disk_config.get('device_modifications', []):
+    for part in mod.get('partitions', []):
+        if part.get('size', {}).get('unit') == '%':
+            if part['size']['value'] == 100:
+                start_val = part['start']['value']
+                start_unit = part.get('start', {}).get('unit', 'MiB')
+                
+                if start_unit == 'MiB':
+                    start_bytes = start_val * 1024 * 1024
+                elif start_unit == 'B':
+                    start_bytes = start_val
+                elif start_unit == 'sectors':
+                    start_bytes = start_val * sector_size
+                else:
+                    start_bytes = start_val * 1024 * 1024
+                    
+                rem_bytes = total_bytes - start_bytes - (2 * 1024 * 1024)
+                part['size'] = {
+                    'sector_size': {'unit': 'B', 'value': sector_size},
+                    'unit': 'B',
+                    'value': rem_bytes
+                }
+
+config['disk_config'] = disk_config
 with open(sys.argv[3], 'w') as f3:
     json.dump(config, f3, indent=4)
-" "${CONFIG_FILE}" "${TMP_DISK_LAYOUT}" "${TMP_CONFIG}"
+" "${CONFIG_FILE}" "${TMP_DISK_LAYOUT}" "${TMP_CONFIG}" "$TARGET_DISK"
 
 if [ ! -f "${CREDS_FILE}" ]; then
     echo "[!] ${CREDS_FILE} not found!"
