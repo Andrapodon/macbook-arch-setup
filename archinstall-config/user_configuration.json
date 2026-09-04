@@ -79,9 +79,9 @@
     "linux-headers",
     "linux-zen-headers"
   ],
-  "keyboard_layout": "de",
+  "keyboard_layout": "de_CH-latin1",
   "locale_config": {
-    "kb_layout": "de",
+    "kb_layout": "de_CH-latin1",
     "sys_enc": "UTF-8",
     "sys_lang": "en_US.UTF-8"
   },
