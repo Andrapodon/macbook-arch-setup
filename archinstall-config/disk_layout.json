@@ -1,0 +1,88 @@
+{
+  "config_type": "manual_partitioning",
+  "device_modifications": [
+    {
+      "device": "/dev/sda",
+      "wipe": true,
+      "partitions": [
+        {
+          "btrfs": [],
+          "dev_path": null,
+          "flags": [
+            "Boot"
+          ],
+          "fs_type": "fat32",
+          "size": {
+            "sector_size": {
+              "unit": "B",
+              "value": 512
+            },
+            "unit": "MiB",
+            "value": 1024
+          },
+          "mount_options": [],
+          "mountpoint": "/boot",
+          "obj_id": "00000000-0000-0000-0000-000000000001",
+          "start": {
+            "sector_size": {
+              "unit": "B",
+              "value": 512
+            },
+            "unit": "MiB",
+            "value": 1
+          },
+          "status": "create",
+          "type": "primary"
+        },
+        {
+          "btrfs": [
+            {
+              "mountpoint": "/",
+              "name": "@"
+            },
+            {
+              "mountpoint": "/home",
+              "name": "@home"
+            },
+            {
+              "mountpoint": "/.snapshots",
+              "name": "@snapshots"
+            },
+            {
+              "mountpoint": "/var/log",
+              "name": "@var_log"
+            }
+          ],
+          "dev_path": null,
+          "flags": [],
+          "fs_type": "btrfs",
+          "size": {
+            "sector_size": {
+              "unit": "B",
+              "value": 512
+            },
+            "unit": "%",
+            "value": 100
+          },
+          "mount_options": [
+            "compress=zstd:1",
+            "noatime",
+            "discard=async"
+          ],
+          "mountpoint": null,
+          "obj_id": "00000000-0000-0000-0000-000000000002",
+          "start": {
+            "sector_size": {
+              "unit": "B",
+              "value": 512
+            },
+            "unit": "MiB",
+            "value": 1025
+          },
+          "status": "create",
+          "type": "primary"
+        }
+      ]
+    }
+  ]
+}

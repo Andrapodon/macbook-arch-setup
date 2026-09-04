@@ -29,10 +29,20 @@ if [ ! -b "$TARGET_DISK" ]; then
     exit 1
 fi
 
+DISK_LAYOUT_FILE="${SCRIPT_DIR}/disk_layout.json"
+TMP_DISK_LAYOUT="/tmp/archinstall_disk_layout.json"
+cp "${DISK_LAYOUT_FILE}" "${TMP_DISK_LAYOUT}"
+sed -i "s|\"/dev/sda\"|\"$TARGET_DISK\"|g" "${TMP_DISK_LAYOUT}"
+
 echo "[*] Updating user_configuration.json with target disk: $TARGET_DISK"
 TMP_CONFIG="/tmp/archinstall_config.json"
-cp "${CONFIG_FILE}" "${TMP_CONFIG}"
-sed -i "s|\"/dev/sda\"|\"$TARGET_DISK\"|g" "${TMP_CONFIG}"
+python -c "import json, sys
+with open(sys.argv[1]) as f1, open(sys.argv[2]) as f2:
+    config = json.load(f1)
+    config['disk_config'] = json.load(f2)
+with open(sys.argv[3], 'w') as f3:
+    json.dump(config, f3, indent=4)
+" "${CONFIG_FILE}" "${TMP_DISK_LAYOUT}" "${TMP_CONFIG}"
 
 if [ ! -f "${CREDS_FILE}" ]; then
     echo "[!] ${CREDS_FILE} not found!"
@@ -44,7 +54,10 @@ echo "[*] Ensuring archinstall is up to date..."
 pacman -Sy --noconfirm archinstall
 
 echo "[*] Launching archinstall with declarative configuration..."
-archinstall --silent --config "${TMP_CONFIG}" --creds "${CREDS_FILE}"
+if ! archinstall --silent --config "${TMP_CONFIG}" --creds "${CREDS_FILE}"; then
+    echo "[!] archinstall failed! Please check the logs."
+    exit 1
+fi
 
 echo "=========================================================================="
 echo "Installation complete!"
