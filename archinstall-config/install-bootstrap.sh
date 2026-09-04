@@ -30,7 +30,9 @@ if [ ! -b "$TARGET_DISK" ]; then
 fi
 
 echo "[*] Updating user_configuration.json with target disk: $TARGET_DISK"
-sed -i "s|\"/dev/sda\"|\"$TARGET_DISK\"|g" "${CONFIG_FILE}"
+TMP_CONFIG="/tmp/archinstall_config.json"
+cp "${CONFIG_FILE}" "${TMP_CONFIG}"
+sed -i "s|\"/dev/sda\"|\"$TARGET_DISK\"|g" "${TMP_CONFIG}"
 
 if [ ! -f "${CREDS_FILE}" ]; then
     echo "[!] ${CREDS_FILE} not found!"
@@ -38,8 +40,11 @@ if [ ! -f "${CREDS_FILE}" ]; then
     exit 1
 fi
 
+echo "[*] Ensuring archinstall is up to date..."
+pacman -Sy --noconfirm archinstall
+
 echo "[*] Launching archinstall with declarative configuration..."
-archinstall --config "${CONFIG_FILE}" --creds "${CREDS_FILE}"
+archinstall --silent --config "${TMP_CONFIG}" --creds "${CREDS_FILE}"
 
 echo "=========================================================================="
 echo "Installation complete!"
