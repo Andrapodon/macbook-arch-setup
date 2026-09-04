@@ -37,7 +37,6 @@
     "networkmanager",
     "curl",
     "wget",
-    "zsh",
     "htop"
   ],
   "parallel_downloads": 5,

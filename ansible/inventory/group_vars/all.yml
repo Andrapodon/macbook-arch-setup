@@ -5,7 +5,7 @@
 
 # User configuration
 target_user: "ramona"
-target_user_shell: "/bin/zsh"
+target_user_shell: "/bin/bash"
 
 # Maintainer SSH public keys (add your SSH public key here for remote access)
 maintainer_ssh_public_keys:
