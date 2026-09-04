@@ -14,3 +14,4 @@ __pycache__/
 *.key
 id_ed25519*
 !*.j2
+vault_password.txt
