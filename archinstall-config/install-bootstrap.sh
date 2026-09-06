@@ -22,12 +22,8 @@ fi
 echo "[*] Available disks:"
 lsblk -d -o NAME,SIZE,TYPE,MODEL
 
-read -p "Enter the target disk for installation (e.g., /dev/sda or /dev/nvme0n1): " TARGET_DISK
-
-if [ ! -b "$TARGET_DISK" ]; then
-    echo "[!] Block device $TARGET_DISK not found."
-    exit 1
-fi
+TARGET_DISK="/dev/sda"
+echo "[*] Target disk hardcoded to: $TARGET_DISK"
 
 DISK_LAYOUT_FILE="${SCRIPT_DIR}/disk_layout.json"
 TMP_DISK_LAYOUT="/tmp/archinstall_disk_layout.json"
@@ -36,10 +32,18 @@ sed -i "s|\"/dev/sda\"|\"$TARGET_DISK\"|g" "${TMP_DISK_LAYOUT}"
 
 echo "[*] Updating user_configuration.json with target disk: $TARGET_DISK"
 TMP_CONFIG="/tmp/archinstall_config.json"
-python -c "import json, sys, subprocess
-with open(sys.argv[1]) as f1, open(sys.argv[2]) as f2:
-    config = json.load(f1)
-    disk_config = json.load(f2)
+python -c "import json, sys, subprocess, os
+try:
+    with open(sys.argv[1]) as f1:
+        config = json.load(f1)
+except FileNotFoundError:
+    sys.exit(f'Error: Could not find user_configuration.json at {sys.argv[1]}')
+
+try:
+    with open(sys.argv[2]) as f2:
+        disk_config = json.load(f2)
+except FileNotFoundError:
+    sys.exit(f'Error: Could not find disk_layout.json at {sys.argv[2]}')
 
 target_disk = sys.argv[4]
 try:
