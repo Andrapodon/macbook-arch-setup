@@ -20,35 +20,7 @@ fi
 TARGET_DISK="/dev/sda"
 echo "[*] Target disk hardcoded to: $TARGET_DISK"
 
-echo "[*] Calculating exact byte size and preparing configuration..."
-python -c "
-import json, subprocess, sys
-try:
-    with open('user_configuration.json', 'r') as f:
-        config = json.load(f)
 
-    target_disk = '${TARGET_DISK}'
-    total_bytes = int(subprocess.check_output(['lsblk', '-n', '-b', '-o', 'SIZE', '-d', target_disk]).strip())
-    sector_size = int(subprocess.check_output(['lsblk', '-n', '-o', 'LOG-SEC', '-d', target_disk]).strip())
-    
-    start_bytes = 1025 * 1024 * 1024
-    rem_bytes = total_bytes - start_bytes - (2 * 1024 * 1024)
-    # Align down to nearest 1 MiB
-    rem_bytes = (rem_bytes // (1024 * 1024)) * (1024 * 1024)
-
-    # Inject exact byte size for root partition
-    parts = config['disk_config']['device_modifications'][0]['partitions']
-    parts[1]['size'] = {
-        'sector_size': {'unit': 'B', 'value': sector_size},
-        'unit': 'B',
-        'value': rem_bytes
-    }
-
-    with open('archinstall_config.json', 'w') as f:
-        json.dump(config, f, indent=4)
-except Exception as e:
-    sys.exit(f'Fatal Python error generating config: {e}')
-"
 
 CREDS_FILE="user_credentials.json"
 if [ ! -f "${CREDS_FILE}" ]; then
@@ -60,7 +32,7 @@ echo "[*] Ensuring archinstall is up to date..."
 pacman -Sy --noconfirm archinstall
 
 echo "[*] Launching archinstall with declarative configuration..."
-if ! archinstall --silent --config "archinstall_config.json" --creds "${CREDS_FILE}"; then
+if ! archinstall --silent --config "user_configuration.json" --creds "${CREDS_FILE}"; then
     echo "[!] archinstall failed! Please check the logs."
     exit 1
 fi
