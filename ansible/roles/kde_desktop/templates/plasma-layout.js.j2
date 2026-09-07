@@ -1,0 +1,49 @@
+// ==============================================================================
+// KDE Plasma macOS-style Layout (PearOS style: Top Menu Bar + Bottom Dock)
+// ==============================================================================
+
+var allPanels = panels();
+for (var i = 0; i < allPanels.length; i++) {
+    allPanels[i].remove();
+}
+
+// 1. Top Panel (macOS Global Menu Bar)
+var topBar = new Panel("org.kde.plasma.desktop.panel");
+topBar.location = "top";
+topBar.height = 30;
+
+// Application launcher / Apple menu
+topBar.addWidget("org.kde.plasma.kickoff");
+
+// Global Application Menu (File, Edit, View...)
+topBar.addWidget("org.kde.plasma.appmenu");
+
+// Panel Spacer pushing Tray to the right
+topBar.addWidget("org.kde.plasma.panelspacer");
+
+// System Tray (Network, Audio, Battery)
+topBar.addWidget("org.kde.plasma.systemtray");
+
+// Digital Clock
+topBar.addWidget("org.kde.plasma.digitalclock");
+
+// 2. Bottom Panel (macOS Floating Dock)
+var dock = new Panel("org.kde.plasma.desktop.panel");
+dock.location = "bottom";
+dock.height = 64;
+dock.floating = true;
+dock.alignment = "center";
+dock.lengthMode = "fitContent";
+
+// Centered Icons-Only Task Manager with pinned everyday apps
+var taskManager = dock.addWidget("org.kde.plasma.icontasks");
+taskManager.currentConfigGroup = ["General"];
+taskManager.writeConfig("launchers", [
+    "applications:firefox.desktop",
+    "applications:org.kde.dolphin.desktop",
+    "applications:org.kde.discover.desktop",
+    "applications:vlc.desktop",
+    "applications:org.kde.plasma-systemmonitor.desktop",
+    "applications:org.kde.konsole.desktop",
+    "applications:systemsettings.desktop"
+]);

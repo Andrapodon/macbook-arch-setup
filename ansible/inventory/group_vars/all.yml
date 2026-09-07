@@ -42,8 +42,8 @@ home_wifi_ssids:
 # SeaDrive (Seafile client)
 seadrive:
   mount_point: "/home/{{ target_user }}/SeaDrive"
-  server_url: "https://seafile.yourdomain.com"
-  username: "her-email@example.com"
+  server_url: "https://seafile.hamartia.cloud"
+  username: "ramona.schueepp@gmail.com"
   enable_autostart: true
 
 # Btrfs Backups (btrbk)

@@ -23,7 +23,7 @@ ssh_user                {{ btrbk.remote_user }}
 
 # Volume definition for root filesystem
 volume /
-  subvolume @
+  subvolume .
     snapshot_name root-snapshot
 {% if btrbk.remote_backup_enabled %}
     target ssh://{{ btrbk.remote_host }}{{ btrbk.remote_dir }}/root
@@ -31,7 +31,7 @@ volume /
 
 # Volume definition for /home filesystem
 volume /home
-  subvolume @home
+  subvolume .
     snapshot_name home-snapshot
 {% if btrbk.remote_backup_enabled %}
     target ssh://{{ btrbk.remote_host }}{{ btrbk.remote_dir }}/home

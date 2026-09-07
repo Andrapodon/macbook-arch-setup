@@ -3,6 +3,9 @@
   hosts: macbook
   become: true
 
+  vars_files:
+    - inventory/group_vars/vault.yml
+
   roles:
     - aur_support
     - macbook_hardware

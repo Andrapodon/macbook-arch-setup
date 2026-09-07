@@ -1,5 +1,5 @@
 ---
-- name: Install KDE Plasma and Wayland desktop packages
+- name: Install KDE Plasma, Wayland, and essential applications
   community.general.pacman:
     name:
       - plasma-meta
@@ -12,6 +12,13 @@
       - kvantum
       - qt5-wayland
       - qt6-wayland
+      - firefox
+      - discover
+      - packagekit-qt6
+      - okular
+      - gwenview
+      - vlc
+      - plasma-systemmonitor
     state: present
 
 - name: Create SDDM config directory
@@ -66,16 +73,147 @@
     - { section: 'KScreen', option: 'ScaleFactor', value: '{{ display.scale_factor }}' }
     - { section: 'General', option: 'TerminalApplication', value: 'konsole' }
 
-- name: Install WhiteSur macOS-like KDE theme from AUR
+- name: Install WhiteSur macOS-like desktop themes and fonts from AUR
   ansible.builtin.command:
-    cmd: yay -S --noconfirm --needed whitesur-kde-theme-git whitesur-icon-theme-git whitesur-cursor-theme-git
+    cmd: yay -S --noconfirm --needed whitesur-kde-theme whitesur-icon-theme-git whitesur-cursor-theme-git whitesur-gtk-theme otf-san-francisco
   become: true
   become_user: "{{ target_user }}"
   register: whitesur_install
   failed_when: whitesur_install.rc != 0
   changed_when: "whitesur_install.rc == 0 and 'there is nothing to do' not in whitesur_install.stdout"
 
+- name: Configure macOS traffic light buttons and WhiteSur decorations in kwinrc
+  community.general.ini_file:
+    path: "/home/{{ target_user }}/.config/kwinrc"
+    section: "{{ item.section }}"
+    option: "{{ item.option }}"
+    value: "{{ item.value }}"
+    owner: "{{ target_user }}"
+    group: "{{ target_user }}"
+    mode: '0644'
+  loop:
+    - { section: 'org.kde.kdecoration2', option: 'ButtonsOnLeft', value: 'XIA' }
+    - { section: 'org.kde.kdecoration2', option: 'ButtonsOnRight', value: '' }
+    - { section: 'org.kde.kdecoration2', option: 'theme', value: '__aurorae__svg__WhiteSur-dark' }
+
+- name: Apply WhiteSur theme and San Francisco fonts in kdeglobals
+  community.general.ini_file:
+    path: "/home/{{ target_user }}/.config/kdeglobals"
+    section: "{{ item.section }}"
+    option: "{{ item.option }}"
+    value: "{{ item.value }}"
+    owner: "{{ target_user }}"
+    group: "{{ target_user }}"
+    mode: '0644'
+  loop:
+    - { section: 'KDE', option: 'LookAndFeelPackage', value: 'com.github.vinceliuice.WhiteSur-dark' }
+    - { section: 'Icons', option: 'Theme', value: 'WhiteSur-dark' }
+    - { section: 'General', option: 'font', value: 'SF Pro Display,10,-1,5,50,0,0,0,0,0' }
+    - { section: 'General', option: 'fixed', value: 'SF Mono,10,-1,5,50,0,0,0,0,0' }
+
+- name: Configure WhiteSur cursor and trackpad natural scrolling in kcminputrc
+  community.general.ini_file:
+    path: "/home/{{ target_user }}/.config/kcminputrc"
+    section: "{{ item.section }}"
+    option: "{{ item.option }}"
+    value: "{{ item.value }}"
+    owner: "{{ target_user }}"
+    group: "{{ target_user }}"
+    mode: '0644'
+  loop:
+    - { section: 'Mouse', option: 'cursorTheme', value: 'WhiteSur-cursors' }
+    - { section: 'Mouse', option: 'cursorSize', value: '24' }
+    - { section: 'Libinput][1452][628][bcm5974', option: 'NaturalScroll', value: 'true' }
+    - { section: 'Libinput][1452][628][bcm5974', option: 'TapToClick', value: 'true' }
+    - { section: 'Libinput][default', option: 'NaturalScroll', value: 'true' }
+    - { section: 'Libinput][default', option: 'TapToClick', value: 'true' }
+
+- name: Configure Left Command key to act as Ctrl in kxkbrc (macOS muscle memory)
+  community.general.ini_file:
+    path: "/home/{{ target_user }}/.config/kxkbrc"
+    section: Layout
+    option: "{{ item.option }}"
+    value: "{{ item.value }}"
+    owner: "{{ target_user }}"
+    group: "{{ target_user }}"
+    mode: '0644'
+  loop:
+    - { option: 'Options', value: 'ctrl:swap_lwin_lctl' }
+    - { option: 'ResetOldOptions', value: 'true' }
+
+- name: Ensure GTK and Kvantum user configuration directories exist
+  ansible.builtin.file:
+    path: "/home/{{ target_user }}/.config/{{ item }}"
+    state: directory
+    owner: "{{ target_user }}"
+    group: "{{ target_user }}"
+    mode: '0755'
+  loop:
+    - gtk-3.0
+    - gtk-4.0
+    - Kvantum
+
+- name: Configure WhiteSur styling for GTK 3 and GTK 4 applications
+  ansible.builtin.copy:
+    content: |
+      [Settings]
+      gtk-theme-name=WhiteSur-Dark
+      gtk-icon-theme-name=WhiteSur-dark
+      gtk-cursor-theme-name=WhiteSur-cursors
+      gtk-font-name=SF Pro Display 10
+    dest: "/home/{{ target_user }}/.config/{{ item }}/settings.ini"
+    owner: "{{ target_user }}"
+    group: "{{ target_user }}"
+    mode: '0644'
+  loop:
+    - gtk-3.0
+    - gtk-4.0
+
+- name: Configure Kvantum WhiteSur theme
+  ansible.builtin.copy:
+    content: |
+      [General]
+      theme=WhiteSurDark
+    dest: "/home/{{ target_user }}/.config/Kvantum/kvantum.kvconfig"
+    owner: "{{ target_user }}"
+    group: "{{ target_user }}"
+    mode: '0644'
+
+- name: Ensure system-wide plasma-workspace directory exists
+  ansible.builtin.file:
+    path: /etc/xdg/plasma-workspace
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Deploy PearOS macOS-style Plasma layout script (Top Bar + Bottom Dock)
+  ansible.builtin.template:
+    src: plasma-layout.js.j2
+    dest: /etc/xdg/plasma-workspace/layout.js
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Disable conflicting display managers if present (e.g. GDM)
+  ansible.builtin.systemd:
+    name: gdm.service
+    enabled: false
+  failed_when: false
+
 - name: Enable SDDM display manager service
   ansible.builtin.systemd:
     name: sddm.service
     enabled: true
+    force: true
+
+- name: Remove GNOME and GDM packages if requested
+  community.general.pacman:
+    name:
+      - gnome
+      - gdm
+    state: absent
+    extra_args: --recursive --unneeded
+  when:
+    - remove_gnome | default(false) | bool
+    - ansible_env.XDG_CURRENT_DESKTOP | default('') != 'GNOME'

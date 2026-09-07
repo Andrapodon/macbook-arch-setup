@@ -18,10 +18,14 @@
       - xf86-input-libinput
     state: present
 
-- name: Install mbpfan from official repos or AUR
-  community.general.pacman:
-    name: mbpfan
-    state: present
+- name: Install mbpfan from AUR
+  ansible.builtin.command:
+    cmd: yay -S --noconfirm --needed mbpfan
+  become: true
+  become_user: "{{ target_user }}"
+  register: mbpfan_install
+  failed_when: mbpfan_install.rc != 0
+  changed_when: "mbpfan_install.rc == 0 and 'there is nothing to do' not in mbpfan_install.stdout"
 
 - name: Configure mbpfan for MacBook Pro 11,4
   ansible.builtin.template:
@@ -72,6 +76,30 @@
   ansible.builtin.copy:
     content: "facetimehd\n"
     dest: /etc/modules-load.d/facetimehd.conf
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Ensure X11/libinput config directory exists
+  ansible.builtin.file:
+    path: /etc/X11/xorg.conf.d
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Configure touchpad natural scrolling and tap-to-click
+  ansible.builtin.template:
+    src: 30-touchpad.conf.j2
+    dest: /etc/X11/xorg.conf.d/30-touchpad.conf
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Configure Left Command key to act as Ctrl (macOS shortcuts)
+  ansible.builtin.template:
+    src: 00-keyboard.conf.j2
+    dest: /etc/X11/xorg.conf.d/00-keyboard.conf
     owner: root
     group: root
     mode: '0644'
