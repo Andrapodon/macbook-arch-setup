@@ -13,7 +13,7 @@ maintainer_ssh_public_keys:
 
 # Hardware / Display settings (Retina 2880x1800, Intel Iris Pro 5200)
 display:
-  scale_factor: 2.0  # 2.0 = 200% integer scaling (looks like 1440x900)
+  scale_factor: 1.75  # 1.75 = 175% scaling (1646x1029 equivalent - ideal Retina balance)
   kwin_blur_strength: 2  # 1=Low, 2=Medium, 3=High. 2 is ideal for Iris Pro 5200
 
 # MacBook Fan & Thermal Management (mbpfan daemon)
