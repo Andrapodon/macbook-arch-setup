@@ -44,7 +44,7 @@ try:
         'value': rem_bytes
     }
 
-    with open('/tmp/archinstall_config.json', 'w') as f:
+    with open('archinstall_config.json', 'w') as f:
         json.dump(config, f, indent=4)
 except Exception as e:
     sys.exit(f'Fatal Python error generating config: {e}')
@@ -60,7 +60,7 @@ echo "[*] Ensuring archinstall is up to date..."
 pacman -Sy --noconfirm archinstall
 
 echo "[*] Launching archinstall with declarative configuration..."
-if ! archinstall --silent --config "/tmp/archinstall_config.json" --creds "${CREDS_FILE}"; then
+if ! archinstall --silent --config "archinstall_config.json" --creds "${CREDS_FILE}"; then
     echo "[!] archinstall failed! Please check the logs."
     exit 1
 fi
