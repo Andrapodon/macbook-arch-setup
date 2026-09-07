@@ -205,6 +205,21 @@
     group: "{{ target_user }}"
     mode: '0644'
 
+- name: Deploy custom 2880x1800 Retina default wallpaper
+  ansible.builtin.copy:
+    src: wallpaper.jpg
+    dest: /usr/share/wallpapers/default.jpg
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Apply default wallpaper for user desktop session
+  ansible.builtin.command:
+    cmd: plasma-apply-wallpaperimage /usr/share/wallpapers/default.jpg
+  become: true
+  become_user: "{{ target_user }}"
+  changed_when: false
+
 - name: Ensure system-wide plasma-workspace directory exists
   ansible.builtin.file:
     path: /etc/xdg/plasma-workspace
