@@ -6,8 +6,7 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-CONFIG_FILE="${SCRIPT_DIR}/user_configuration.json"
-CREDS_FILE="${SCRIPT_DIR}/user_credentials.json"
+cd "${SCRIPT_DIR}"
 
 echo "=== Arch Linux Installer for MacBook Pro (Retina, 15-inch, Mid 2015) ==="
 
@@ -18,73 +17,42 @@ if ! ping -c 1 archlinux.org &>/dev/null; then
     exit 1
 fi
 
-# Detect Apple SSD
-echo "[*] Available disks:"
-lsblk -d -o NAME,SIZE,TYPE,MODEL
-
 TARGET_DISK="/dev/sda"
 echo "[*] Target disk hardcoded to: $TARGET_DISK"
 
-DISK_LAYOUT_FILE="${SCRIPT_DIR}/disk_layout.json"
-TMP_DISK_LAYOUT="/tmp/archinstall_disk_layout.json"
-cp "${DISK_LAYOUT_FILE}" "${TMP_DISK_LAYOUT}"
-sed -i "s|\"/dev/sda\"|\"$TARGET_DISK\"|g" "${TMP_DISK_LAYOUT}"
-
-echo "[*] Updating user_configuration.json with target disk: $TARGET_DISK"
-TMP_CONFIG="/tmp/archinstall_config.json"
-python -c "import json, sys, subprocess, os
+echo "[*] Calculating exact byte size and preparing configuration..."
+python -c "
+import json, subprocess, sys
 try:
-    with open(sys.argv[1]) as f1:
-        config = json.load(f1)
-except FileNotFoundError:
-    sys.exit(f'Error: Could not find user_configuration.json at {sys.argv[1]}')
+    with open('user_configuration.json', 'r') as f:
+        config = json.load(f)
 
-try:
-    with open(sys.argv[2]) as f2:
-        disk_config = json.load(f2)
-except FileNotFoundError:
-    sys.exit(f'Error: Could not find disk_layout.json at {sys.argv[2]}')
-
-target_disk = sys.argv[4]
-try:
+    target_disk = '${TARGET_DISK}'
     total_bytes = int(subprocess.check_output(['lsblk', '-n', '-b', '-o', 'SIZE', '-d', target_disk]).strip())
     sector_size = int(subprocess.check_output(['lsblk', '-n', '-o', 'LOG-SEC', '-d', target_disk]).strip())
+    
+    start_bytes = 1025 * 1024 * 1024
+    rem_bytes = total_bytes - start_bytes - (2 * 1024 * 1024)
+    # Align down to nearest 1 MiB
+    rem_bytes = (rem_bytes // (1024 * 1024)) * (1024 * 1024)
+
+    # Inject exact byte size for root partition
+    parts = config['disk_config']['device_modifications'][0]['partitions']
+    parts[1]['size'] = {
+        'sector_size': {'unit': 'B', 'value': sector_size},
+        'unit': 'B',
+        'value': rem_bytes
+    }
+
+    with open('/tmp/archinstall_config.json', 'w') as f:
+        json.dump(config, f, indent=4)
 except Exception as e:
-    sys.exit(f'Failed to get disk size: {e}')
+    sys.exit(f'Fatal Python error generating config: {e}')
+"
 
-for mod in disk_config.get('device_modifications', []):
-    for part in mod.get('partitions', []):
-        if part.get('size', {}).get('unit') == '%':
-            if part['size']['value'] == 100:
-                start_val = part['start']['value']
-                start_unit = part.get('start', {}).get('unit', 'MiB')
-                
-                if start_unit == 'MiB':
-                    start_bytes = start_val * 1024 * 1024
-                elif start_unit == 'B':
-                    start_bytes = start_val
-                elif start_unit == 'sectors':
-                    start_bytes = start_val * sector_size
-                else:
-                    start_bytes = start_val * 1024 * 1024
-                    
-                rem_bytes = total_bytes - start_bytes - (2 * 1024 * 1024)
-                # Align down to nearest 1 MiB (1024 * 1024 bytes) to prevent "Partition is Misaligned" error
-                rem_bytes = (rem_bytes // (1024 * 1024)) * (1024 * 1024)
-                part['size'] = {
-                    'sector_size': {'unit': 'B', 'value': sector_size},
-                    'unit': 'B',
-                    'value': rem_bytes
-                }
-
-config['disk_config'] = disk_config
-with open(sys.argv[3], 'w') as f3:
-    json.dump(config, f3, indent=4)
-" "${CONFIG_FILE}" "${TMP_DISK_LAYOUT}" "${TMP_CONFIG}" "$TARGET_DISK"
-
+CREDS_FILE="user_credentials.json"
 if [ ! -f "${CREDS_FILE}" ]; then
-    echo "[!] ${CREDS_FILE} not found!"
-    echo "    Please copy user_credentials.json.example to user_credentials.json and set your passwords."
+    echo "[!] ${CREDS_FILE} not found! Please create it."
     exit 1
 fi
 
@@ -92,7 +60,7 @@ echo "[*] Ensuring archinstall is up to date..."
 pacman -Sy --noconfirm archinstall
 
 echo "[*] Launching archinstall with declarative configuration..."
-if ! archinstall --silent --config "${TMP_CONFIG}" --creds "${CREDS_FILE}"; then
+if ! archinstall --silent --config "/tmp/archinstall_config.json" --creds "${CREDS_FILE}"; then
     echo "[!] archinstall failed! Please check the logs."
     exit 1
 fi

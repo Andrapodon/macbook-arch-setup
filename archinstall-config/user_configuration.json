@@ -1,50 +1,138 @@
 {
-  "version": "2.8.0",
-  "audio_config": {
-    "audio": "pipewire"
-  },
-  "bootloader": "systemd-boot",
-  "hostname": "macbook",
-  "kernels": [
-    "linux",
-    "linux-zen",
-    "linux-headers",
-    "linux-zen-headers"
-  ],
-  "keyboard_layout": "de_CH-latin1",
-  "locale_config": {
-    "kb_layout": "de_CH-latin1",
-    "sys_enc": "UTF-8",
-    "sys_lang": "en_US.UTF-8"
-  },
-  "network_config": {
-    "type": "nm"
-  },
-  "packages": [
-    "base",
-    "base-devel",
-    "linux",
-    "linux-zen",
-    "linux-firmware",
-    "linux-headers",
-    "linux-zen-headers",
-    "git",
-    "ansible",
-    "python",
-    "openssh",
-    "sudo",
-    "btrfs-progs",
-    "networkmanager",
-    "curl",
-    "wget",
-    "htop"
-  ],
-  "parallel_downloads": 5,
-  "profile_config": {
-    "profile": {
-      "details": [],
-      "main": "Minimal"
+    "version": "2.8.0",
+    "audio_config": {
+        "audio": "pipewire"
+    },
+    "bootloader": "systemd-boot",
+    "hostname": "macbook",
+    "kernels": [
+        "linux",
+        "linux-zen",
+        "linux-headers",
+        "linux-zen-headers"
+    ],
+    "keyboard_layout": "de_CH-latin1",
+    "locale_config": {
+        "kb_layout": "de_CH-latin1",
+        "sys_enc": "UTF-8",
+        "sys_lang": "en_US.UTF-8"
+    },
+    "network_config": {
+        "type": "nm"
+    },
+    "packages": [
+        "base",
+        "base-devel",
+        "linux",
+        "linux-zen",
+        "linux-firmware",
+        "linux-headers",
+        "linux-zen-headers",
+        "git",
+        "ansible",
+        "python",
+        "openssh",
+        "sudo",
+        "btrfs-progs",
+        "networkmanager",
+        "curl",
+        "wget",
+        "htop"
+    ],
+    "parallel_downloads": 5,
+    "profile_config": {
+        "profile": {
+            "details": [],
+            "main": "Minimal"
+        }
+    },
+    "timezone": "Europe/Berlin",
+    "disk_config": {
+        "config_type": "manual_partitioning",
+        "device_modifications": [
+            {
+                "device": "/dev/sda",
+                "wipe": true,
+                "partitions": [
+                    {
+                        "btrfs": [],
+                        "dev_path": null,
+                        "flags": [
+                            "Boot"
+                        ],
+                        "fs_type": "fat32",
+                        "size": {
+                            "sector_size": {
+                                "unit": "B",
+                                "value": 512
+                            },
+                            "unit": "MiB",
+                            "value": 1024
+                        },
+                        "mount_options": [],
+                        "mountpoint": "/boot",
+                        "obj_id": "00000000-0000-0000-0000-000000000001",
+                        "start": {
+                            "sector_size": {
+                                "unit": "B",
+                                "value": 512
+                            },
+                            "unit": "MiB",
+                            "value": 1
+                        },
+                        "status": "create",
+                        "type": "primary"
+                    },
+                    {
+                        "btrfs": [
+                            {
+                                "mountpoint": "/",
+                                "name": "@"
+                            },
+                            {
+                                "mountpoint": "/home",
+                                "name": "@home"
+                            },
+                            {
+                                "mountpoint": "/.snapshots",
+                                "name": "@snapshots"
+                            },
+                            {
+                                "mountpoint": "/var/log",
+                                "name": "@var_log"
+                            }
+                        ],
+                        "dev_path": null,
+                        "flags": [],
+                        "fs_type": "btrfs",
+                        "size": {
+                            "sector_size": {
+                                "unit": "B",
+                                "value": 512
+                            },
+                            "unit": "%",
+                            "value": 100
+                        },
+                        "mount_options": [
+                            "compress=zstd:1",
+                            "noatime",
+                            "discard=async"
+                        ],
+                        "mountpoint": null,
+                        "obj_id": "00000000-0000-0000-0000-000000000002",
+                        "start": {
+                            "sector_size": {
+                                "unit": "B",
+                                "value": 512
+                            },
+                            "unit": "MiB",
+                            "value": 1025
+                        },
+                        "status": "create",
+                        "type": "primary"
+                    }
+                ]
+            }
+        ]
     }
-  },
-  "timezone": "Europe/Berlin"
 }
