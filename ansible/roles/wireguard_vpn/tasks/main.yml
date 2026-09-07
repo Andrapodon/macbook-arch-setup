@@ -14,13 +14,29 @@
     group: root
     mode: '0700'
 
-- name: Deploy WireGuard wg0 configuration
+- name: Check if WireGuard client.conf exists in Downloads
+  ansible.builtin.stat:
+    path: "/home/{{ target_user }}/Downloads/client.conf"
+  register: downloaded_wg_conf
+
+- name: Deploy WireGuard wg0 configuration from Downloads if present
+  ansible.builtin.copy:
+    src: "/home/{{ target_user }}/Downloads/client.conf"
+    dest: "/etc/wireguard/{{ wireguard.interface | default('wg0') }}.conf"
+    owner: root
+    group: root
+    mode: '0600'
+    remote_src: true
+  when: downloaded_wg_conf.stat.exists
+
+- name: Deploy WireGuard wg0 configuration from template if client.conf is not in Downloads
   ansible.builtin.template:
     src: wg0.conf.j2
     dest: "/etc/wireguard/{{ wireguard.interface }}.conf"
     owner: root
     group: root
     mode: '0600'
+  when: not downloaded_wg_conf.stat.exists
 
 - name: Ensure NetworkManager dispatcher directory exists
   ansible.builtin.file:
