@@ -141,6 +141,32 @@
     - { option: 'Options', value: 'ctrl:swap_lwin_lctl' }
     - { option: 'ResetOldOptions', value: 'true' }
 
+- name: Configure KRunner Spotlight floating style
+  community.general.ini_file:
+    path: "/home/{{ target_user }}/.config/krunnerrc"
+    section: General
+    option: "{{ item.option }}"
+    value: "{{ item.value }}"
+    owner: "{{ target_user }}"
+    group: "{{ target_user }}"
+    mode: '0644'
+  loop:
+    - { option: 'FreeFloating', value: 'true' }
+    - { option: 'historyBehavior', value: 'ImmediateCompletion' }
+
+- name: Configure Spotlight Cmd+Space shortcut for KRunner
+  community.general.ini_file:
+    path: "/home/{{ target_user }}/.config/kglobalshortcutsrc"
+    section: "{{ item.section }}"
+    option: "{{ item.option }}"
+    value: "{{ item.value }}"
+    owner: "{{ target_user }}"
+    group: "{{ target_user }}"
+    mode: '0644'
+  loop:
+    - { section: 'services][org.kde.krunner.desktop', option: '_launch', value: 'Ctrl+Space\tMeta+Space\tAlt+Space,Alt+Space\tAlt+F2\tSearch,Launch KRunner' }
+    - { section: 'org.kde.krunner.desktop', option: '_launch', value: 'Ctrl+Space\tMeta+Space\tAlt+Space,Alt+Space\tAlt+F2\tSearch,KRunner' }
+
 - name: Ensure GTK and Kvantum user configuration directories exist
   ansible.builtin.file:
     path: "/home/{{ target_user }}/.config/{{ item }}"
