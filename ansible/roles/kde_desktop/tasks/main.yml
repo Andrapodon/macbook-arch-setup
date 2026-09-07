@@ -210,10 +210,18 @@
 - name: Remove GNOME and GDM packages if requested
   community.general.pacman:
     name:
-      - gnome
       - gdm
+      - gnome-shell
+      - mutter
+      - gnome-session
+      - gnome-control-center
+      - gnome-settings-daemon
+      - xdg-desktop-portal-gnome
+      - gnome-software
+      - gnome-tour
+      - gnome-console
+      - epiphany
     state: absent
-    extra_args: --recursive --unneeded
   when:
     - remove_gnome | default(false) | bool
     - ansible_env.XDG_CURRENT_DESKTOP | default('') != 'GNOME'

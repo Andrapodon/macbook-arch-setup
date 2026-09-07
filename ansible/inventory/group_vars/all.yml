@@ -36,6 +36,7 @@ hid_apple:
 # Network & Home VPN (WireGuard + Auto-Connect on WAN)
 home_wifi_ssids:
   - "Dehoam"
+  - "DehoamExpress"
 
 
 

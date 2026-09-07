@@ -13,7 +13,9 @@ topBar.location = "top";
 topBar.height = 30;
 
 // Application launcher / Apple menu
-topBar.addWidget("org.kde.plasma.kickoff");
+var kicker = topBar.addWidget("org.kde.plasma.kickoff");
+kicker.currentConfigGroup = ["General"];
+kicker.writeConfig("icon", "start-here");
 
 // Global Application Menu (File, Edit, View...)
 topBar.addWidget("org.kde.plasma.appmenu");
@@ -24,8 +26,14 @@ topBar.addWidget("org.kde.plasma.panelspacer");
 // System Tray (Network, Audio, Battery)
 topBar.addWidget("org.kde.plasma.systemtray");
 
+// Spotlight Search
+topBar.addWidget("org.kde.milou");
+
 // Digital Clock
-topBar.addWidget("org.kde.plasma.digitalclock");
+var clock = topBar.addWidget("org.kde.plasma.digitalclock");
+clock.currentConfigGroup = ["Appearance"];
+clock.writeConfig("showDate", "true");
+clock.writeConfig("dateFormat", "shortDate");
 
 // 2. Bottom Panel (macOS Floating Dock)
 var dock = new Panel("org.kde.plasma.desktop.panel");
@@ -33,17 +41,16 @@ dock.location = "bottom";
 dock.height = 64;
 dock.floating = true;
 dock.alignment = "center";
-dock.lengthMode = "fitContent";
+dock.lengthMode = "fit";
+dock.hiding = "windowscover";
 
 // Centered Icons-Only Task Manager with pinned everyday apps
 var taskManager = dock.addWidget("org.kde.plasma.icontasks");
 taskManager.currentConfigGroup = ["General"];
 taskManager.writeConfig("launchers", [
-    "applications:firefox.desktop",
     "applications:org.kde.dolphin.desktop",
-    "applications:org.kde.discover.desktop",
-    "applications:vlc.desktop",
-    "applications:org.kde.plasma-systemmonitor.desktop",
+    "applications:firefox.desktop",
     "applications:org.kde.konsole.desktop",
-    "applications:systemsettings.desktop"
+    "applications:systemsettings.desktop",
+    "applications:org.kde.discover.desktop"
 ]);

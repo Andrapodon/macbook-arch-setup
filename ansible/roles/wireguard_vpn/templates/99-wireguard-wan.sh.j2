@@ -6,6 +6,11 @@ INTERFACE="$1"
 ACTION="$2"
 WG_IFACE="{{ wireguard.interface }}"
 
+# Ignore events triggered by WireGuard itself or loopback to prevent infinite loops
+if [ "$INTERFACE" = "$WG_IFACE" ] || [ "$INTERFACE" = "lo" ] || [ "${CONNECTION_ID:-}" = "$WG_IFACE" ]; then
+    exit 0
+fi
+
 # Home Wi-Fi SSIDs list
 HOME_SSIDS=(
 {% for ssid in home_wifi_ssids %}
