@@ -42,8 +42,8 @@
     path: /usr/share/wallpapers/sddm
     state: directory
     owner: root
-    group: root
-    mode: '0755'
+    group: wheel
+    mode: '0775'
 
 - name: Deploy SDDM wallpapers
   ansible.builtin.copy:
