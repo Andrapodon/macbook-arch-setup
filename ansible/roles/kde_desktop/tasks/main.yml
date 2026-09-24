@@ -37,6 +37,51 @@
     group: root
     mode: '0644'
 
+- name: Ensure SDDM wallpapers pool directory exists
+  ansible.builtin.file:
+    path: /usr/share/wallpapers/sddm
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Deploy SDDM wallpapers
+  ansible.builtin.copy:
+    src: "{{ item }}"
+    dest: "/usr/share/wallpapers/sddm/{{ item }}"
+    owner: root
+    group: root
+    mode: '0644'
+  loop:
+    - mandala-kaleidoscope.jpg
+    - mandala-sun.jpg
+
+- name: Deploy SDDM random background script
+  ansible.builtin.copy:
+    src: sddm-random-background.sh
+    dest: /usr/local/bin/sddm-random-background.sh
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Ensure SDDM systemd service override directory exists
+  ansible.builtin.file:
+    path: /etc/systemd/system/sddm.service.d
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Deploy SDDM systemd ExecStartPre drop-in for random background
+  ansible.builtin.copy:
+    content: |
+      [Service]
+      ExecStartPre=-/usr/local/bin/sddm-random-background.sh
+    dest: /etc/systemd/system/sddm.service.d/override.conf
+    owner: root
+    group: root
+    mode: '0644'
+
 - name: Ensure target user config directories exist
   ansible.builtin.file:
     path: "/home/{{ target_user }}/.config"
@@ -247,6 +292,7 @@
     name: sddm.service
     enabled: true
     force: true
+    daemon_reload: true
 
 - name: Remove GNOME and GDM packages if requested
   community.general.pacman:
