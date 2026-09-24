@@ -83,6 +83,30 @@
     group: root
     mode: '0644'
 
+- name: Disable background blur in WhiteSur SDDM themes for crisp wallpaper visibility
+  ansible.builtin.replace:
+    path: "/usr/share/sddm/themes/{{ item }}/Main.qml"
+    regexp: 'visible: config\.type === "image"'
+    replace: 'visible: config.type === "image" && config.blur !== "false"'
+  loop:
+    - WhiteSur-dark
+    - WhiteSur-light
+  failed_when: false
+
+- name: Set blur=false in WhiteSur SDDM theme configs
+  community.general.ini_file:
+    path: "/usr/share/sddm/themes/{{ item }}/theme.conf"
+    section: General
+    option: blur
+    value: "false"
+    owner: root
+    group: root
+    mode: '0644'
+  loop:
+    - WhiteSur-dark
+    - WhiteSur-light
+  failed_when: false
+
 - name: Ensure target user config directories exist
   ansible.builtin.file:
     path: "/home/{{ target_user }}/.config"
