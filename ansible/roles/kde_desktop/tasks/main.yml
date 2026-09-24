@@ -10,6 +10,7 @@
       - kdegraphics-thumbnailers
       - ffmpegthumbs
       - kvantum
+      - kvantum-qt5
       - qt5-wayland
       - qt6-wayland
       - firefox
@@ -139,6 +140,7 @@
   loop:
     - { section: 'org.kde.kdecoration2', option: 'ButtonsOnLeft', value: 'XIA' }
     - { section: 'org.kde.kdecoration2', option: 'ButtonsOnRight', value: '' }
+    - { section: 'org.kde.kdecoration2', option: 'library', value: 'org.kde.kwin.aurorae' }
     - { section: 'org.kde.kdecoration2', option: 'theme', value: '__aurorae__svg__WhiteSur-dark' }
 
 - name: Apply WhiteSur theme and San Francisco fonts in kdeglobals
@@ -152,6 +154,8 @@
     mode: '0644'
   loop:
     - { section: 'KDE', option: 'LookAndFeelPackage', value: 'com.github.vinceliuice.WhiteSur-dark' }
+    - { section: 'KDE', option: 'widgetStyle', value: 'kvantum-dark' }
+    - { section: 'General', option: 'ColorScheme', value: 'WhiteSurDark' }
     - { section: 'Icons', option: 'Theme', value: 'WhiteSur-dark' }
     - { section: 'General', option: 'font', value: 'SF Pro Display,10,-1,5,50,0,0,0,0,0' }
     - { section: 'General', option: 'fixed', value: 'SF Mono,10,-1,5,50,0,0,0,0,0' }
@@ -172,6 +176,16 @@
     - { section: 'Libinput][1452][628][bcm5974', option: 'TapToClick', value: 'true' }
     - { section: 'Libinput][default', option: 'NaturalScroll', value: 'true' }
     - { section: 'Libinput][default', option: 'TapToClick', value: 'true' }
+
+- name: Apply WhiteSur desktop theme in plasmarc
+  community.general.ini_file:
+    path: "/home/{{ target_user }}/.config/plasmarc"
+    section: Theme
+    option: name
+    value: WhiteSur-dark
+    owner: "{{ target_user }}"
+    group: "{{ target_user }}"
+    mode: '0644'
 
 - name: Configure Left Command key to act as Ctrl in kxkbrc (macOS muscle memory)
   community.general.ini_file:
