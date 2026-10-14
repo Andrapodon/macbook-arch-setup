@@ -16,6 +16,8 @@
       - pipewire-alsa
       - libinput
       - xf86-input-libinput
+      - bluez
+      - bluez-utils
     state: present
 
 - name: Install mbpfan from AUR
@@ -45,6 +47,33 @@
     mode: '0644'
   notify: Rebuild initramfs
 
+- name: Configure btusb module options for Apple Broadcom Bluetooth controller (05ac:8290)
+  ansible.builtin.copy:
+    content: "options btusb reset=0 enable_autosuspend=0\n"
+    dest: /etc/modprobe.d/btusb.conf
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Rebuild initramfs
+
+- name: Ensure TLP drop-in directory exists
+  ansible.builtin.file:
+    path: /etc/tlp.d
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Exclude Apple Bluetooth USB controller from TLP autosuspend
+  ansible.builtin.copy:
+    content: |
+      USB_EXCLUDE_BTUSB=1
+      USB_DENYLIST="05ac:8290"
+    dest: /etc/tlp.d/10-bluetooth.conf
+    owner: root
+    group: root
+    mode: '0644'
+
 - name: Enable and start mbpfan service
   ansible.builtin.systemd:
     name: mbpfan.service
@@ -54,6 +83,12 @@
 - name: Enable and start tlp
   ansible.builtin.systemd:
     name: tlp.service
+    state: started
+    enabled: true
+
+- name: Enable and start Bluetooth service
+  ansible.builtin.systemd:
+    name: bluetooth.service
     state: started
     enabled: true
 
