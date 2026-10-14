@@ -18,6 +18,7 @@
       - xf86-input-libinput
       - bluez
       - bluez-utils
+      - kernel-modules-hook
     state: present
 
 - name: Install mbpfan from AUR
