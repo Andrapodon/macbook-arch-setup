@@ -93,6 +93,157 @@
     state: started
     enabled: true
 
+- name: Install self-healing script for Apple Broadcom Bluetooth (05ac:8290)
+  ansible.builtin.copy:
+    dest: /usr/local/sbin/macbook-bt-heal
+    owner: root
+    group: root
+    mode: '0755'
+    content: |
+      #!/usr/bin/env bash
+      # Prevent concurrent executions from colliding on usb1-port8
+      exec 9>/run/macbook-bt-heal.lock
+      flock -n 9 || exit 0
+
+      # Do not cycle USB ports if the laptop lid is closed
+      if grep -q "closed" /proc/acpi/button/lid/LID0/state 2>/dev/null; then
+        exit 0
+      fi
+
+      # 1. Wait up to 6 seconds for normal initialization to complete first
+      for _ in 1 2 3 4 5 6; do
+        if timeout 2 bluetoothctl list 2>/dev/null | grep -q "Controller"; then
+          timeout 3 bluetoothctl power on >/dev/null 2>&1 || true
+          exit 0
+        fi
+        sleep 1
+      done
+
+      # 2. If still missing/wedged, run up to 3 USB port reset passes with btmon active
+      echo N > /sys/module/btusb/parameters/reset 2>/dev/null || true
+      systemctl start bluetooth.service 2>/dev/null || true
+
+      btmon >/dev/null 2>&1 &
+      BTMON_PID=$!
+      trap "kill $BTMON_PID 2>/dev/null || true" EXIT
+
+      for attempt in 1 2 3; do
+        if grep -q "closed" /proc/acpi/button/lid/LID0/state 2>/dev/null; then
+          exit 0
+        fi
+        logger -t macbook-bt-heal "Attempt $attempt: cycling usb1-port8 for BCM20703A1 (05ac:8290)..."
+        echo 1 > /sys/bus/usb/devices/usb1/1-0:1.0/usb1-port8/disable
+        sleep 1
+        echo 0 > /sys/bus/usb/devices/usb1/1-0:1.0/usb1-port8/disable
+
+        for _ in $(seq 1 12); do
+          sleep 1
+          if timeout 2 bluetoothctl list 2>/dev/null | grep -q "Controller"; then
+            logger -t macbook-bt-heal "Controller recovered on attempt $attempt."
+            timeout 3 bluetoothctl power on >/dev/null 2>&1 || true
+            exit 0
+          fi
+        done
+      done
+  tags:
+    - sleep_fix
+    - bluetooth
+
+- name: Install systemd boot service for Apple Bluetooth self-heal
+  ansible.builtin.copy:
+    dest: /etc/systemd/system/macbook-bt-heal.service
+    owner: root
+    group: root
+    mode: '0644'
+    content: |
+      [Unit]
+      Description=Self-heal Apple Broadcom Bluetooth Controller (05ac:8290) if wedged at boot
+      After=bluetooth.service multi-user.target
+      Wants=bluetooth.service
+
+      [Service]
+      Type=oneshot
+      ExecStart=/usr/local/sbin/macbook-bt-heal
+      RemainAfterExit=yes
+
+      [Install]
+      WantedBy=multi-user.target
+  tags:
+    - sleep_fix
+    - bluetooth
+
+- name: Enable macbook-bt-heal.service at boot
+  ansible.builtin.systemd:
+    name: macbook-bt-heal.service
+    enabled: true
+    daemon_reload: true
+  tags:
+    - sleep_fix
+    - bluetooth
+
+- name: Install systemd-sleep hook to unload/reload brcmfmac Wi-Fi and heal Bluetooth on resume
+  ansible.builtin.copy:
+    dest: /usr/lib/systemd/system-sleep/macbook-bt-heal.sh
+    owner: root
+    group: root
+    mode: '0755'
+    content: |
+      #!/usr/bin/env bash
+      case "$1" in
+        pre)
+          # 1. Power off Bluetooth radio & disable USB 1-8 remote wakeup before S3
+          #    so Bluetooth mice (e.g. MX Master 3S) cannot wake the laptop with the lid closed,
+          #    while keeping XHC1 enabled in /proc/acpi/wakeup so 05ac:8290 keeps aux power.
+          echo disabled > /sys/bus/usb/devices/1-8/power/wakeup 2>/dev/null || true
+          timeout 2 /usr/bin/bluetoothctl power off >/dev/null 2>&1 || true
+
+          # 2. Unload Broadcom BCM43602 PCIe Wi-Fi before S3 sleep to prevent
+          #    brcmf_pcie_pm_enter_D3 timeout (-5 / -EIO) infinite suspend loop
+          /usr/bin/modprobe -r brcmfmac_wcc brcmfmac 2>/dev/null || true
+          ;;
+        post)
+          # 1. Reload Broadcom Wi-Fi with fresh firmware after S3 resume
+          /usr/bin/modprobe brcmfmac 2>/dev/null || true
+
+          # 2. Heal & power on Bluetooth controller in background if lid is open
+          /usr/local/sbin/macbook-bt-heal &
+          ;;
+      esac
+  tags:
+    - sleep_fix
+    - wifi
+    - bluetooth
+
+- name: Install service to disable spurious ARPT (Wi-Fi) closed-lid ACPI wakeups while keeping XHC1 enabled
+  ansible.builtin.copy:
+    dest: /etc/systemd/system/macbook-acpi-wakeup.service
+    owner: root
+    group: root
+    mode: '0644'
+    content: |
+      [Unit]
+      Description=Disable spurious ARPT (Wi-Fi) ACPI S3 wakeups on MacBookPro11,4 while keeping XHC1 aux power
+      After=multi-user.target
+
+      [Service]
+      Type=oneshot
+      ExecStart=/usr/bin/bash -c 'grep -q "^ARPT.*\\*enabled" /proc/acpi/wakeup && echo ARPT > /proc/acpi/wakeup || true; grep -q "^XHC1.*\\*disabled" /proc/acpi/wakeup && echo XHC1 > /proc/acpi/wakeup || true; echo disabled > /sys/bus/usb/devices/1-8/power/wakeup 2>/dev/null || true'
+      RemainAfterExit=yes
+
+      [Install]
+      WantedBy=multi-user.target
+  tags:
+    - sleep_fix
+
+- name: Enable and start macbook-acpi-wakeup.service
+  ansible.builtin.systemd:
+    name: macbook-acpi-wakeup.service
+    state: started
+    enabled: true
+    daemon_reload: true
+  tags:
+    - sleep_fix
+
 - name: Enable intel-undervolt
   ansible.builtin.systemd:
     name: intel-undervolt.service
